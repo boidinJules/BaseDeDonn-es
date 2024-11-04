@@ -8,7 +8,7 @@
         }
 
         $moyenne = $somme / count($tab);
-        echo 'La moyenne est de ' .$moyenne. '/ 20';
+        echo 'La moyenne est de ' .$moyenne. '/20.';
     }
 
     echo verifmoyenne($tab, $somme);
