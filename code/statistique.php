@@ -4,7 +4,7 @@
         if ($longueur % 2 == 0) {
             $index1 = $longueur / 2 - 1;
             $index2 = $longueur / 2;
-            $mediane = ($index1 + $index2) / 2;
+            $mediane = ($salaire[$index1] + $salaire[$index2]) / 2;
             echo "La médiane des salaires est de " . $mediane . ".";
         } else {
             $index = $longueur / 2;
@@ -20,6 +20,6 @@
         }
 
         $moyenne = $somme / count($salaire);
-        echo 'La moyenne est de ' .$moyenne. '/20.';
+        echo 'La moyenne est de ' .$moyenne. '.';
     }
 ?>
