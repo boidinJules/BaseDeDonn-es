@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tri Selection</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Tri Selection</h1>
+    <p>Saisie éléments du tableau</p>
+    <p>Envoie du tableau via AJAX</p>
+
+    <script>
+        let numbersArray = [];
+
+        window.onload = function() {
+        let valeur;
+        while (true) {
+            valeur = prompt("Saisissez un nombre > 0");
+            if (valeur <= 0) break;
+            numbersArray.push(valeur);
+        }
+
+    $.ajax({
+            url: 'https://15f92eea-b621-48a9-bdbe-b10a1e73d672.mock.pstmn.io',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(numbersArray),
+        });
+    }
+    </script>
+
+</body>
+</html>
