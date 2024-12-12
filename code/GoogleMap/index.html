@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <title>Courses dans le Parc</title>
+</head>
+<body>
+<h1>JRostand Reperes Stade</h1>
+<hr>
+
+<select id="courseSelect">
+    <option value="none">Aucune</option>
+    <option value="course1">Course 1</option>
+    <option value="course2">Course 2</option>
+    <option value="course3">Course 3</option>
+</select>
+
+<div id="map" style="height: 80vh;"></div>
+
+<style type="text/css">
+    html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+    }
+    #map {
+        width: 100%;
+        height: 80vh;
+    }
+</style>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA7Y32T_PJHZxYcK3BJYJFNwSl6cuvLXpo&callback=initMap" async defer></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+    let map;
+    let courseMarkers = [];
+    let coursePolylines = [];
+    let allCoursesData = [];
+    let parkMarkers = [];
+    let parkPolyline = null;
+
+    function initMap() {
+        const myLatLng = { lat: 48.95842318055254, lng: 2.5470810423980086 };
+        map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 16,
+            center: myLatLng,
+        });
+
+        loadDoc();
+    }
+
+    function loadDoc() {
+        // Charger les repères du parc
+        $.ajax({
+            url: "markersJrostand.json",
+            method: "GET",
+            dataType: "json",
+            success: function(markers) {
+                let markerPositions = [];
+                parkMarkers = [];
+
+                for (let i = 0; i < markers.length; i++) {
+                    const marker = markers[i];
+                    const markerPosition = { lat: marker.lat, lng: marker.lng };
+                    markerPositions.push(markerPosition);
+
+                    const mapMarker = new google.maps.Marker({
+                        position: markerPosition,
+                        map: map,
+                        title: "Marker " + (i + 1)
+                    });
+                    parkMarkers.push(mapMarker);
+
+                    mapMarker.addListener("click", function() {
+                        alert("Marqueur ID: " + marker.id);
+                    });
+                }
+
+                parkPolyline = new google.maps.Polyline({
+                    path: markerPositions,
+                    geodesic: true,
+                    strokeColor: "#FF0000",
+                    strokeOpacity: 1.0,
+                    strokeWeight: 2,
+                    map: null
+                });
+
+                $.ajax({
+                    url: "course.json",
+                    method: "GET",
+                    dataType: "json",
+                    success: function(courses) {
+                        allCoursesData = courses;
+
+                        for (let i = 0; i < courses.length; i++) {
+                            const course = courses[i];
+                            const courseCoordinates = course.coordinates.map(coord => ({
+                                lat: coord.lat,
+                                lng: coord.lng
+                            }));
+
+                            const markersForCourse = [];
+                            const polylineForCourse = new google.maps.Polyline({
+                                path: courseCoordinates,
+                                geodesic: true,
+                                strokeColor: "#FF0000",
+                                strokeOpacity: 1.0,
+                                strokeWeight: 3,
+                                map: null
+                            });
+
+                            courseCoordinates.forEach((coord, index) => {
+                                const courseMarker = new google.maps.Marker({
+                                    position: coord,
+                                    map: null, 
+                                    title: course.name + " Point " + (index + 1)
+                                });
+                                markersForCourse.push(courseMarker);
+                            });
+
+                            courseMarkers.push(markersForCourse);
+                            coursePolylines.push(polylineForCourse);
+                        }
+
+                        $('#courseSelect').on('change', function() {
+                            const selectedCourse = $(this).val();
+                            displaySelectedCourse(selectedCourse);
+                        });
+
+                        displaySelectedCourse('none');
+                    }
+                });
+            }
+        });
+    }
+
+    function displaySelectedCourse(courseId) {
+        for (let i = 0; i < coursePolylines.length; i++) {
+            coursePolylines[i].setMap(null);
+            for (let j = 0; j < courseMarkers[i].length; j++) {
+                courseMarkers[i][j].setMap(null);
+            }
+        }
+
+        parkMarkers.forEach(marker => marker.setMap(null));
+        if (parkPolyline) {
+            parkPolyline.setMap(null);
+        }
+
+        if (courseId === 'none') {
+            parkMarkers.forEach(marker => marker.setMap(map));
+            if (parkPolyline) {
+                parkPolyline.setMap(map);
+            }
+            return;
+        }
+
+        const index = parseInt(courseId.replace('course', '')) - 1;
+        coursePolylines[index].setMap(map);
+        for (let i = 0; i < courseMarkers[index].length; i++) {
+            courseMarkers[index][i].setMap(map);
+        }
+    }
+
+    window.onload = initMap;
+</script>
+</body>
+</html>
