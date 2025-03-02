@@ -1,37 +1,52 @@
-version : '3'
+version: '3.8'
 
 services:
-  nginx:
-    image: nginx:1.22-alpine
+  php:
+    build: .
+    container_name: php-container
+    volumes:
+      - ./code:/var/www/html  # Montage du répertoire local vers le conteneur
     ports:
       - "8080:80"
-    volumes:
-      - ./code:/code
-      - ./nginx.conf:/etc/nginx/nginx.conf
-  php:
-    # image: php:8.3-fpm-alpine
-    build: .
-    volumes:
-      - ./code:/code
+    depends_on:
+      - mysql
+    networks:
+      - app_network
+
   mysql:
     image: mysql:8
+    container_name: mysql-container
     environment:
-      # 🚨 Changer si vous utilisez cette configuration en production
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: appdb
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
+      MYSQL_USER: eleve
+      MYSQL_PASSWORD: eleve
     volumes:
-      - dbdata:/var/lib/mysql 
+      - dbdata:/var/lib/mysql  # Volume persistant pour la base de données
     ports:
-      - "3306:3306"  # Expose port 3306
+      - "3306:3306"
+    networks:
+      - app_network
+
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin-container
     environment:
-      PMA_HOST: mysql
+      PMA_HOST: mysql  # Assurez-vous que cela correspond au nom du service MySQL
       MYSQL_ROOT_PASSWORD: root
+      PMA_USER: eleve
+      PMA_PASSWORD: eleve
     ports:
       - "8081:80"
+    depends_on:
+      - mysql
+    networks:
+      - app_network
 
-volumes: 
-  dbdata:   # volume managé pour sauvegarder la bdd en local
+volumes:
+  dbdata:  # Volume persistant pour les données MySQL
+    driver: local
+
+networks:
+  app_network:
+    driver: bridge
