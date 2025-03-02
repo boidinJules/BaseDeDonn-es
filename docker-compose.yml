@@ -1,52 +1,44 @@
 version: '3.8'
 
 services:
-  php:
-    build: .
-    container_name: php-container
+  mysql:
+    image: mysql:latest
+    container_name: mysql_container
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: mydatabase
+      MYSQL_USER: eleve
+      MYSQL_PASSWORD: eleve
+    ports:
+      - "3306:3306"
     volumes:
-      - ./code:/var/www/html  # Montage du répertoire local vers le conteneur
+      - db_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin_container
+    restart: always
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: root
     ports:
       - "8080:80"
     depends_on:
       - mysql
-    networks:
-      - app_network
 
-  mysql:
-    image: mysql:8
-    container_name: mysql-container
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: appdb
-      MYSQL_USER: eleve
-      MYSQL_PASSWORD: eleve
+  php:
+    image: php:apache
+    container_name: php_container
+    restart: always
     volumes:
-      - dbdata:/var/lib/mysql  # Volume persistant pour la base de données
+      - ./www:/var/www/html
     ports:
-      - "3306:3306"
-    networks:
-      - app_network
-
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: phpmyadmin-container
-    environment:
-      PMA_HOST: mysql  # Assurez-vous que cela correspond au nom du service MySQL
-      MYSQL_ROOT_PASSWORD: root
-      PMA_USER: eleve
-      PMA_PASSWORD: eleve
-    ports:
-      - "8081:80"
+      - "8000:80"
     depends_on:
       - mysql
-    networks:
-      - app_network
 
 volumes:
-  dbdata:  # Volume persistant pour les données MySQL
-    driver: local
-
-networks:
-  app_network:
-    driver: bridge
+  db_data:
